@@ -1,0 +1,1254 @@
+---
+title: "Gendered Journeys to Mixed Unions"
+subtitle: "BSPS 2022 - Migration Strand"
+author: Dr. Marion Lieutaud
+institute: London School of Economics, Department of Methodology, Understanding Society research fellow
+format:
+  revealjs:
+    theme: sky
+    #toc: true
+    #number-sections: true
+    logo: graphics/LSElogofull.png
+    #css: styles.css
+    footer: m.lieutaud@lse.ac.uk
+    smaller: true
+    slide-number: c/t
+    title-slide-attributes:
+      fontcolor: "black"
+      #data-background-image: graphics/we-crossed-rio-grande.jpg
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+```{r packages, include=FALSE}
+library(tidyverse)
+library(foreign)
+library(questionr)
+library(kableExtra)
+library(expss)
+library (haven)
+
+# for survey-weighting
+library(survey)
+library(srvyr)
+
+# for plots
+library(patchwork)
+library(hrbrthemes)
+
+# for colours
+library(wesanderson)
+library(RColorBrewer)
+hrbrthemes::import_roboto_condensed()
+```
+
+```{r graphics, include = FALSE}
+# ggplot theme
+theme_set(theme_ipsum())
+personal_theme = theme(legend.position = "right",
+                       plot.title = element_text(hjust = 0.5),
+                       plot.subtitle = element_text(hjust = 0.5, size = 8, face = "italic"),
+                       plot.title.position = "plot",
+                       plot.caption.position =  "plot",
+                       plot.caption = element_text(hjust = 0.5, face= "italic"),
+                       axis.title.y = element_blank(),
+                       axis.text.x = element_blank())
+
+# colour schemes
+
+## cpl_colscale / cpl_colfill
+cpl_mycolours <- brewer.pal(6,"PuOr")
+#names(cpl_mycolours) <- levels(t2$cpl)
+cpl_colscale <- scale_colour_manual(name = "Couple types",values = cpl_mycolours)
+cpl_colfill <- scale_fill_manual(name = "Couple types",values = cpl_mycolours)
+
+## cplsex_colscale / cplsex_colfill
+cpl_sex_mycolours <- brewer.pal(9,"PuOr")
+#names(cpl_sex_mycolours) <- levels(t2$cpl_sex)
+cpl_sex_colscale <- scale_colour_manual(name = "Couple types",values = cpl_sex_mycolours)
+cpl_sex_colfill <- scale_fill_manual(name = "Couple types",values = cpl_sex_mycolours)
+
+## pam6_colscale
+seq6_colour <- c("lightblue", "lavenderblush", "lemonchiffon", "orange", "peru", "saddlebrown")
+seq6_names <- c("Child migrants (1.5G)", "Single young adults", "Single adults","Formation 1st partnership","Established 1st partnership","Partnership reconfigurations")
+pam6_colscale <- scale_colour_manual(name = "Union-migration sequences",values = seq6_colour)
+pam6_colfill <- scale_fill_manual(name = "Union-migration sequences",values = seq6_colour)
+
+colours_gdr_chevalier <- c("#446455", "#FDD262")
+
+# "#446455" --> migrant women
+# "#FDD262" --> migrant men
+
+# miscellaneous
+dodge <- position_dodge()
+```
+
+
+## Literature review
+
+::: notes
+*Speaker notes*
+-   to enable presentor mode: press 'S' key
+
+-   to zoom into one part of the slide, press 'option' key and click on
+    that part
+:::
+
+::: r-fit-text
+
+:::incremental
+- *Intermarriage: classic indicator of assimilation*. High intermarriage rates = high assimilation and low distance between groups.
+
+- Interested in _Why is it that some migrant groups intermarry more than others?_ Group-level differences and segmented assimilation. Opportunity structures at group level (e.g. group size and marriage market constraints) and at micro-sociological level: timing of couple formation is also connected to partner choice (Soehl & Yahirunn, 2011). These processes and constraints are gendered (Gonzales-Ferrer 2018).
+
+
+- *The consequences of intermarriage*: (1) labour market performance (Meng & Gregory 2005, Furtado & Theadoropoulos 2010). (2) the intermarriage 'premium'.
+
+- *Gendered processes and gendered consequences* is the intermarriage premium only for migrant men? (Nystedt & Dribe 2015; Basu 2015; Nottmeyer 2014 on paid and unpaid labour).
+:::
+:::
+
+## Research questions {background-image="graphics/we-crossed-rio-grande.jpg" background-opacity="0.5"}
+
+- Does the intermarriage premium apply to the gender-division of labour, and if yes, does it apply equally to migrant men and migrant women? 
+
+- Could this be linked to different circumstances of migration and mixed couple formation?
+
+- theoretically: could it be that (1) intermarriage does not necessarily reward assimilation for women especially; (2) conjugal mixedness (Collet 2015) does not simply produce adaptation, but depends on power balance in couple.  
+
+# Data and methods
+
+## Data
+```{r, echo=FALSE}
+data_subsamples <- data.frame(sub_samples = c("UKLHS individual survey respondents (wave 2)",
+                                     "- in cohabiting relationships",
+                                     "- both partners were full survey respondents",
+                                     "- man-woman relationships",
+                                     "- both partners of working age (18-60)",
+                                     "- exc. obvs with key missing values*",
+                                     "- with individual partnership history data",
+                                     "- migrant respondents only",
+                                     "- in mixed couples (MIG-NAT)",
+                                     
+                                     "Individual survey respondents (Te0 1)",
+                                     "- in cohabiting relationships",
+                                     "- man-woman relationships",
+                                     "- both partners of working age (18-60)",
+                                     "- migrant respondents only",
+                                     "- excl. natives from overseas territories",
+                                     "- excl. obvs with key missing values", 
+                                     "- in mixed couples (MIG-NAT)"),
+                         
+                         n = c(54565, 34281, 27058, 26826, 18200, 17286, 15678, 2623, 947,
+                               21761, 13242, 13155, 12612, 6266, 5871, 5828, 1863))
+
+uklhs_subsample <- data_subsamples[0:9,]
+rownames(uklhs_subsample) <- c()
+teo_subsample <- data_subsamples[10:17,] 
+rownames(teo_subsample) <- c()
+```
+MIG-NAT couples: one partner was born abroad* (MIG), their partner was born in the country of immigration to parents also born there (NAT). 
+
+::: aside
+*in the French context: born abroad _and_ born a foreigner (_né étranger à l'étranger_).
+Excludes very small numbers of children of expats and pieds-noirs. 
+
+Key missing values refer to missing values for migration
+background (whether UK- or French-born) and for couple type.
+:::
+
+::: {.panel-tabset}
+
+### French data
+```{r}
+teo_subsample %>%
+  mutate(n = ifelse(n %in% c(5828), cell_spec(n, "html", bold = T, background = "white", color = "grey"), 
+                    ifelse(n %in% c(1863), cell_spec(n, "html", bold = T, background = "white"), n))) %>%
+  rename(`Sub-samples (cumulative criteria)` = sub_samples) %>%
+  kable(booktabs=TRUE, escape=F) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE,
+                html_font = "Arial Narrow",
+                font_size = 22) %>%
+  pack_rows("FR: Trajectoires et Origines (2008-2009) - INED-INSEE", 1, 8, label_row_css = "background-color: #666; color: #fff;") 
+```
+
+
+### British data
+
+```{r}
+uklhs_subsample %>%
+  mutate(n = ifelse(n %in% c(2623), cell_spec(n, "html", bold = T, background = "white", color = "grey"), 
+                    ifelse(n %in% c(947), cell_spec(n, "html", bold = T, background = "white"), n))) %>%
+  rename(`Sub-samples (cumulative criteria)` = sub_samples) %>%
+  kable(booktabs=TRUE, escape=F) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE,
+                html_font = "Arial Narrow",
+                font_size = 22) %>%
+  pack_rows("UK: Understanding Society (2009-) - ISER ", 1, 9, label_row_css = "background-color: #666; color: #fff;")
+```
+:::
+
+
+
+## Method
+
+::: incremental
+- *Sequence analysis*: building life-course-migration sequences to understand the timing and context of both migration and couple formation. Focus on 10-year window around the moment of first migration to the UK. 
+
+- Descriptive statistics on migrants and mixed couples sequences and linear regression models with gender division of labour as outcome variable. 
+
+- survey-weighting
+:::
+
+```{r, eval=FALSE}
+library(labelled)
+c <- NA
+c <- read_labelled_csv("~/Dropbox (Personal)/stats & scripts/British analyses/UKLHS analyses/UKLHS_cp_full_dataprep.csv") %>%
+     select("b_strata", #(?) - not b_strata
+            "b_hhorig",
+            "b_psu",
+            "b_indpxus_xw", # might need a different weight since we only look at completed interviews
+            "b_indinub_xw", # this is for adult main interviews (no proxy)
+            "b_indinus_xw",
+            "pidp",
+            "b_ppid",
+            "b_ioutcome",
+            "sp_b_ioutcome",
+            "agebracket_indiv",
+            "agebracket_cpl",
+            "workingsample0",
+            "workingsample4",
+            "workingsample5",
+            "workingsample6",
+            "workingsample7",
+            "workingsample8",
+            "b_gdr", # gender for all
+            "sp_b_gdr",
+            "sexcpl", # whether man-woman couple / #"sex", # gender of migrant: migrant women/migrant men/NA (!)
+            "mig",
+            "mig_sex",
+            "sp_mig",
+            "sp_mig_sex",
+            "cpl",
+            "cpl_sex",
+            "yrbirth", # year of birth
+            "sp_yrbirth",
+            "b_age_dv",
+            "sp_b_age_dv",
+            "agegap",
+            "yr2uk",
+            "sp_yr2uk",
+            "ukbn",
+            "sp_ukbn",
+            "mother_ukbn",
+            "father_ukbn",
+            "sp_mother_ukbn",
+            "sp_father_ukbn",
+            "orig0",
+            "orig1",
+            "orig1_noUK",
+            "plbornc_all",
+            "b_plbornc_all",
+            "sp_plbornc_all",
+            "macob_all",
+            "pacob_all",
+            "sp_macob_all",
+            "sp_pacob_all",
+            "sp_orig0",
+            "sp_orig1",
+            "mother_orig",
+            "father_orig",
+            "sp_mother_orig",
+            "sp_father_orig",
+            "mother_orig1",
+            "father_orig1",
+            "sp_mother_orig1",
+            "sp_father_orig1",
+            "ethnic",
+            "sp_ethnic",
+            "racel_dv",
+            "sp_racel_dv",
+            "UK_citzn",
+            "sp_UK_citzn",
+            "foreign_citzn",
+            "sp_foreign_citzn",
+            "b_live_cpl",
+            "sp_b_live_cpl", # whether married/civil partnership relc /  #"ever.mar", # ever married (dummy) (!)
+            "dipl",
+            "dipl_5",
+            "sp_dipl",
+            "sp_dipl_5",
+            "engskills",
+            "ever_child",
+            "sp_ever_child",
+            "nb_child",
+            "sp_nb_child",
+            "many_child", # if ego had 3 or more children
+            "sp_many_child",
+            "parent_childHH",# if parent of a child under 16 living in HH
+            "sp_parent_childHH",
+            "b_age_youngestchildHH",# age youngest child in HH at wave 2
+            "sp_b_age_youngestchildHH",
+            "yrwhen_child1",
+            "sp_yrwhen_child1",
+            "agewhen_child1",
+            "sp_agewhen_child1",
+            "yrwhen_startrel1",
+            "yrwhen_mar1",
+            "yrwhen_startrelc",
+            "only1rel",
+            "agewhen_mig",
+            "relc_mig",
+            "rel1_mig",
+            "child1_mig",
+            "b_scmolwp",
+            "a_scmolwp",
+            "b_mastat_dv",
+            "b_marstat",
+            "a_oprlg", # whether belongs to a religion at w1
+            "b_oprlg", # whether belongs to a religion at w2 and not asked at w1
+            "a_oprlg1",
+            "a_oprlg2", # attends religious services
+            "b_oprlg1", # which religion (for Britain)
+            "a_nirel_all", # which religion (for Northern Ireland),
+            "b_nirel_all", # which religion (for Northern Ireland)
+            "gdr_domdiv", # gender division of (remaining) housework tasks and childcare
+            "cpl_r_womhouswk", # woman's share of (man-woman) couple's housework time
+            "total_domtasks", # total tasks taken on by the couple 
+            "childcare_gdr", # gdr division of childcare according to partner 1
+            "sp_childcare_gdr", # according to partner 2
+            "groceries_gdr",
+            "sp_groceries_gdr",
+            "cook_gdr",
+            "sp_cook_gdr",
+            "clean_gdr",
+            "sp_clean_gdr",
+            "laundry_gdr",
+            "sp_laundry_gdr",
+            "gdr_domdiv", # gdr division of housework/childcare responsibilities
+            "gdr_workdiv", # gdr division of paid employment
+            "cpl_nowork", # identifies couples where neither partner are in paid work
+            "cpl_nowork2", # identifies couples where neither partner are in paid work (using employ variable)
+            "cpl_rdomhr", # women's share of reproductive labour time (%)
+            "cpl_rwkh", # men's share of paid work time (%)
+            "gdr_spec1", # gender specialisation of labour
+            "gdr_spec2")
+
+c2 <- subset(c, c$workingsample8 == "In")
+#table(c$mig, c$cpl)
+```
+
+```{r data, include = FALSE}
+#starting from TeO_dataprep
+#setwd("~/Desktop/stats & scripts/French analyses")
+#teO <- read_dta("indiv2.dta") # main (without special licence data)
+#21761 observations
+#t2 <- read.csv("/Users/marionlieutaud/Dropbox (Personal)/stats & scripts/French analyses/TeO analyses/TeO_prep_t2_23mars2021.csv") # all man-woman cohabiting relationships
+
+t2 <- read.csv("~/Dropbox (Personal)/stats & scripts/French analyses/TeO analyses/TeO_prep_t2_23mars2021.csv") # all man-woman cohabiting relationships
+
+indiv2 <- read.dta("~/Dropbox (Personal)/stats & scripts/French analyses/TeO analyses/indiv2.dta") %>%
+  select("ident", 
+         "group1",
+         #"poidsi",
+         "c_esti", # estimation de la rémunération mensuelle nette de l'activité du (de la) conjoint(e)
+         "p_auremu", #remuneration nette for students/unemployed/retired
+         "p_nsremu", #remuneration nette for self-employed people
+         "p_salnet", #remuneration nette for employed people
+         "regionnaise2",
+         "active","activcjt",
+         "c_shop", "c_repas", "c_ecole",
+         "sexec") 
+
+t3 <- NA
+t3 <- merge(t2, indiv2, by = "ident", all.x=TRUE)
+t2 <- t3
+rm(t3)
+rm(indiv2)
+```
+
+```{r recoding_demographics, include=FALSE}
+### FACTOR levels and recoding for variables of interest
+pam6_levels <- c("Child migrants (1.5G)","Single young adults", "Single adults", "Formation 1st partnership","Established 1st partnership","Partnership reconfigurations")
+t2$pam6 <- factor(t2$pam6, levels=pam6_levels)
+
+cpl_levels <- c("NAT-NAT", "2G-NAT", "2G-2G", "MIG-NAT", "MIG-2G", "MIG-MIG")
+cpl_mig_levels <- c("MIG-NAT", "MIG-2G", "MIG-MIG")
+cpl_sex_levels <- c("NAT-NAT", "2Gw-NATm", "2Gm-NATw", "2G-2G", "MIGw-NATm", "MIGm-NATw", "MIGw-2Gm", "MIGm-2Gw", "MIG-MIG")
+visa3_levels <- c("work", "studies", "family", "none needed", "other")
+
+regi2_levels <- c("EU", "North Africa", "Africa: other", "Turkey","Mainland Southeast Asia", "Other")
+dipl_levels <- c("No qualifications", "High school or professional degree", "Further education")
+sex_levels <- c("migrant women", "migrant men")
+pam6_levels <- c("Child migrants (1.5G)","Single young adults", "Single adults","Formation 1st partnership","Established 1st partnership","Partnership reconfigurations")
+relg_levels <- c("Protestant","Catholic","Other Christian","Muslim", "Buddhist","Other religion","No religion")
+relgref_levels <- c("No religion", "Catholic", "Protestant","Other Christian","Muslim", "Buddhist","Other religion")
+
+dipl_levels <- c("Further education","High school or professional degree","No or lower qualifications")
+dipl2_levels <- c("No or lower qualifications","High school or professional degree","Further education")
+
+
+t2 <- t2 %>%
+  mutate(cplm = factor(cplm, levels = c("MIG-MIG", "MIG-2G", "MIG-NAT")),
+         cpl = factor(cpl, levels = cpl_levels),
+         cpl_sex = factor(cpl_sex, levels = cpl_sex_levels),
+         relg = factor(relg, levels = relg_levels),
+         relgref = factor(relg, levels = relgref_levels))
+
+
+# Educational level
+t2 <- t2 %>%
+  mutate(furtheredu = dplyr::recode(dipl,  `No or lower qualifications` = "no", `High school or professional degree` = "no", `Further education` = "yes"),
+         dipl = factor(dipl, levels = dipl2_levels))
+
+t2$diplHE <- NA
+t2$dipl_HE <- t2$furtheredu
+
+# Region of birth
+t2 <- t2 %>%
+  mutate(regi2 = factor(regi2, levels = regi2_levels)) %>%
+  mutate(regi3 = ifelse(regi == "Mainland France", "France", as.character(regi2))) %>%
+  mutate(regi3 = factor(regi3, levels = c("France", "EU", "North Africa", "Africa: other", "Turkey","Mainland Southeast Asia", "Other")))
+
+# Region of origin (over 2 generations)
+t2 <- t2 %>%
+  mutate(orig_f = ifelse(mig == "NAT", "Mainland France",
+                         ifelse (mig %in% c("DOM", "DOM 2G"), "Overseas departments", orig1))) %>%
+  mutate(orig_f = dplyr::recode(orig_f, `EU-27: other` = "EU: other")) %>%
+  mutate(orig_f = factor(orig_f, levels = c("Mainland France", "Overseas departments", "Southern EU", "EU: other", "North Africa", "Sahelian Africa", "Africa: other", "Turkey", "Mainland Southeast Asia", "Other"))) %>%
+  mutate(orig_f2 = dplyr::recode(orig_f, `Sahelian Africa` = "Africa: other")) %>%
+  mutate(orig_f2 = factor(orig_f2, levels = c("Mainland France", "Southern EU", "EU: other", "North Africa", "Africa: other", "Turkey", "Mainland Southeast Asia", "Other")))
+
+# Union-migration sequences
+t2 <- t2 %>%
+  mutate(pam6nat = ifelse(mig == c("NAT", "2G"), "French native", as.character(pam6))) %>%
+  mutate(pam6nat = factor(pam6nat, levels = c("French native", "Child migrants (1.5G)","Single young adults", "Single adults", "Formation 1st partnership","Established 1st partnership","Partnership reconfigurations")))
+freq(t2$pam6nat)
+
+t2 <- t2 %>%
+  mutate(pam6nat2 = ifelse(mig == "NAT", "French native (NAT)",
+                    ifelse(mig == "2G", "French native (2G)", as.character(pam6)))) %>%
+  mutate(pam6nat2 = factor(pam6nat2, levels = c("French native (NAT)", "French native (2G)", "Child migrants (1.5G)","Single young adults", "Single adults", "Formation 1st partnership","Established 1st partnership","Partnership reconfigurations")))
+freq(t2$pam6nat2)
+
+t2 <- t2 %>%
+  mutate(pam6ref = relevel(pam6, ref = "Single adults"), # ref = single adults
+         pam6order = factor(pam6, levels = c("Single adults", "Single young adults", "Formation 1st partnership","Established 1st partnership","Partnership reconfigurations", "Child migrants (1.5G)"))) # ordered
+
+# Religious
+t2 <- t2 %>% 
+  mutate(religious = ifelse(relg == "No religion", FALSE, TRUE))
+
+# Age (age08 = age of ego end of 2008 / age08ca= age of partner end of 2008)
+
+# Women's age
+t2$age_wom <- NA
+t2$age_wom <- ifelse(t2$sexee == 2, t2$age08, t2$age08ca)
+# Men's age
+t2$age_men <- NA
+t2$age_men <- ifelse(t2$sexee == 1, t2$age08, t2$age08ca)
+# Age difference Man-Woman
+t2$agegap <- NA
+t2$agegap <- t2$age_men - t2$age_wom
+# Average couple age
+t2$age_cpl <- NA
+t2$age_cpl <- (t2$age_wom + t2$age_men)/2
+
+
+# Years since first migration to France
+t2 <- t2 %>%
+ rename('yrsince_mig' ='yrs_sincemig')
+
+# children in HH and children < 18 in HH
+t2$child18HH <- NA
+t2$child18HH <- ifelse(t2$age_youngestchildHH > 17 | is.na(t2$age_youngestchildHH) == T, "no", "yes")
+
+t2$child16HH <- NA
+t2$child16HH <- ifelse(t2$age_youngestchildHH > 15 | is.na(t2$age_youngestchildHH) == T, "no", "yes")
+
+## --> gdrm
+t2 <- t2 %>%
+  mutate(gdrm = ifelse(mig == "MIG" & sexee == 2, "migrant women",
+                ifelse(mig == "MIG" & sexee == 1, "migrant men", NA))) %>%
+  mutate(gdrm = factor(gdrm, levels = c("migrant women", "migrant men")))
+```
+
+```{r recoding_labour, include = FALSE}
+
+# Paid work
+t2$work <- NA
+t2$work[t2$active == "1"] <- "In paid work"
+t2$work[t2$active == "2"] <- "Other" #currently unemployed but has worked before
+t2$work[t2$active == "3"] <- "Other" #never worked
+t2$workp <- NA
+t2$workp[t2$activcjt == "1"] <- "In paid work"
+t2$workp[t2$activcjt == "2"] <- "Other"
+t2$workp[t2$activcjt == "3"] <- "Other"
+
+# Couple's labour market engagement
+t2$cpl_work <- NA
+t2$cpl_work <- ifelse(t2$work == "In paid work" & t2$workp == "In paid work", "Both employed",
+                        ifelse((t2$work == "In paid work" & t2$workp == "Other") |
+                                 (t2$work == "Other" & t2$workp == "In paid work"), "Only one employed", 
+                               ifelse(t2$work == "Other" & t2$workp == "Other", "Neither employed", NA)))
+
+
+# Couple's gender division of paid labour (factor)
+t2$gdr_work <- NA
+t2$gdr_work <- ifelse(t2$cpl_work == "Only one employed" & ((t2$sexee == 2 & t2$work == "In paid work") | (t2$sexec == 2 & t2$workp == "In paid work")), "Only woman employed",
+                        ifelse(t2$cpl_work == "Only one employed" & ((t2$sexee == 1 & t2$work == "In paid work") | (t2$sexec == 1 & t2$workp == "In paid work")), "Only man employed", t2$cpl_work))
+freq(t2$gdr_work)
+
+# Scale gender division of paid work (based on employment status)
+t2$gdr_workdiv <- NA
+t2$gdr_workdiv[t2$gdr_work == "Only woman employed"] <- -1
+t2$gdr_workdiv[t2$gdr_work %in% c("Both employed", "Neither employed")] <- 0
+t2$gdr_workdiv[t2$gdr_work == "Only man employed"] <- 1
+t2$gdr_workdiv <- as.numeric(t2$gdr_workdiv)
+
+# Joint employment status
+t2 <- t2 %>%
+  mutate(gdr_employ_div = dplyr::recode(gdr_emp_div,`both employed` = "Dual earners", 
+                                                    `only man employed` = "Sole male earner",
+                                                    `only woman employed` = "Sole female earner",
+                                                    `neither employed` = "Both not employed")) %>%
+  mutate(gdr_employ_div =  factor(gdr_employ_div, levels = c("Both not employed", "Dual earners","Sole female earner","Sole male earner")))
+
+freq(t2$gdr_employ_div)
+
+# Identify unemployed couples
+t2 <- t2 %>%
+  mutate(cpl_nowork = ifelse(gdr_employ_div == "Both not employed", TRUE, FALSE))
+
+
+
+
+# Who does the housework?
+
+# Bring kids to school
+### error in gdr_school - re-coded here
+t2$gdr_school <- NA
+t2$gdr_school[t2$sexee == 2 & t2$c_ecole == 1] <- 1
+t2$gdr_school[t2$sexee == 2 & t2$c_ecole == 2] <- 0
+t2$gdr_school[t2$sexee == 2 & t2$c_ecole == 3] <- -1
+t2$gdr_school[t2$sexee == 2 & t2$c_ecole %in% 4:7] <- 0
+t2$gdr_school[t2$sexee == 1 & t2$c_ecole == 1] <- -1
+t2$gdr_school[t2$sexee == 1 & t2$c_ecole == 2] <- 0
+t2$gdr_school[t2$sexee == 1 & t2$c_ecole == 3] <- 1
+t2$gdr_school[t2$sexee == 1 & t2$c_ecole %in% 4:7] <- 0
+t2$gdr_school[is.na(t2$c_ecole)==T |t2$c_ecole=="" ] <- 0
+t2$gdr_school
+t2$cpl_school <- NA
+t2$cpl_school <- ifelse(t2$c_ecole %in% 4:5 | t2$c_ecole == "", 0, 1)
+
+# Cooking
+t2$gdr_food <- NA
+t2$gdr_food[t2$sexee == 2 & t2$c_repas == 1] <- 1
+t2$gdr_food[t2$sexee == 2 & t2$c_repas == 2] <- 0
+t2$gdr_food[t2$sexee == 2 & t2$c_repas == 3] <- -1
+t2$gdr_food[t2$sexee == 2 & t2$c_repas %in% c(4,5)] <- 0
+t2$gdr_food[t2$sexee == 1 & t2$c_repas == 1] <- -1
+t2$gdr_food[t2$sexee == 1 & t2$c_repas == 2] <- 0
+t2$gdr_food[t2$sexee == 1 & t2$c_repas == 3] <- 1
+t2$gdr_food[t2$sexee == 1 & t2$c_repas %in% c(4,5)] <- 0
+t2$gdr_food[is.na(t2$c_repas) ==T ] <- 0
+t2$cpl_food <- NA # whether the couple does the meals
+t2$cpl_food <- ifelse(t2$c_repas %in% 4:5 | is.na(t2$c_repas)== T, 0, 1)
+
+# Food shopping
+t2$gdr_shop <- NA
+t2$gdr_shop[t2$sexee == 2 & t2$c_shop == 1] <- 1
+t2$gdr_shop[t2$sexee == 2 & t2$c_shop == 2] <- 0
+t2$gdr_shop[t2$sexee == 2 & t2$c_shop == 3] <- -1
+t2$gdr_shop[t2$sexee == 2 & t2$c_shop %in% c(4,5)] <- 0
+t2$gdr_shop[t2$sexee == 1 & t2$c_shop == 1] <- -1
+t2$gdr_shop[t2$sexee == 1 & t2$c_shop == 2] <- 0
+t2$gdr_shop[t2$sexee == 1 & t2$c_shop == 3] <- 1
+t2$gdr_shop[t2$sexee == 1 & t2$c_shop %in% c(4,5)] <- 0
+t2$gdr_shop[is.na(t2$c_shop) ==T ] <- 0
+t2$cpl_shop <- NA
+t2$cpl_shop <- ifelse(t2$c_shop %in% 4:5 | is.na(t2$c_shop)== T, 0, 1)
+
+# Gender division of domestic tasks
+t2$gdr_domdiv1 <- NA
+t2$gdr_domdiv1 <- t2$gdr_food + t2$gdr_shop + t2$gdr_school
+t2$cpl_totaldom1 <- NA
+t2$cpl_totaldom1 <- t2$cpl_food + t2$cpl_shop + t2$cpl_school
+t2$gdr_domdiv <- NA
+t2$gdr_domdiv <- t2$gdr_domdiv1/t2$cpl_totaldom1 # weighted by total tasks undertaken by couple
+
+
+# Gender-specialisation of labour: paid + unpaid labour
+
+t2$gdr_spec <- NA
+t2$gdr_spec <- (t2$gdr_domdiv + t2$gdr_empdiv_sc)/2 
+```
+
+::: notes
+Distribution of working time not possible with TeO. Distribution of
+income: - not possible because no indicator of partner's income. -
+however, there is information on the household's income, and ego's
+income. Could work (to a point, and only when looking only at ego=women.
+or ego=migrant)
+:::
+
+
+```{r, include = FALSE}
+## Survey-weighting
+options(survey.lonely.psu = "adjust") 
+options(na.action="na.pass") 
+w <- t2 %>% 
+  filter(is.na(gdr_spec)==F & is.na(cpl)==F & agebracket==T) %>% # excludes missing values for gender-specialisation?
+  as_survey_design(ids = ident,
+                   weights = poidsin)
+```
+
+::: notes
+The survey-weighted analyses exclude individuals with missing values
+for: (1) gender-specialisation index (this may be a problem); (2) cpl
+variable (this is legit)
+:::
+
+
+
+# Results
+
+## Migrants' gender division of labour: the mixed couple effect
+
+```{r, include=FALSE}
+### plot 1: gdr_spec / cpl
+out1_tpw <- w %>%
+  group_by(cpl) %>% 
+  summarize(prop = survey_mean(gdr_spec, na.rm = TRUE))
+
+pg1 <- ggplot(data=out1_tpw,
+            mapping = aes(x=cpl, y=prop,
+                          ymin = prop - 2*prop_se,
+                          ymax = prop + 2*prop_se,
+                          fill = cpl,
+                          color = cpl,
+                          group = cpl), ylim(-3:3))
+
+pg2 <- pg1 + 
+    geom_col(position = position_dodge(width = 0.9), alpha = 0.5) +
+    geom_errorbar(width = 0.2, 
+                  position = position_dodge(width = 0.9)) +
+  cpl_colscale + cpl_colfill +
+    labs(title="Gender-specialisation",
+         fill = NULL,
+         color = NULL,
+         x = NULL, subtitle = "y= mean gender-specialisation score (index 1)")
+  
+pg3 <- pg2 + personal_theme
+
+#for standalone graph
+pg3_1 <- pg3 + labs(caption = "Source: TeO1 (2008-2009), survey-weighted\nUniverse: coresident man-woman couples (18-60)",
+                      title = "Gender-specialisation of labour by couple types")
+
+# plot 2: gdr_workdiv / cpl
+
+out2_tpw <- w %>%
+  group_by(cpl) %>% 
+  summarize(prop = survey_mean(gdr_empdiv_sc, na.rm = TRUE))
+
+pgg1 <- ggplot(data=out2_tpw,
+            mapping = aes(x=cpl, y=prop,
+                          ymin = prop - 2*prop_se,
+                          ymax = prop + 2*prop_se,
+                          fill = cpl,
+                          color = cpl,
+                          group = cpl), ylim(-3:3))
+
+pgg2 <- pgg1 + 
+    geom_col(position = position_dodge(width = 0.9), alpha = 0.5) +
+    geom_errorbar(width = 0.2, 
+                  position = position_dodge(width = 0.9)) +
+  cpl_colscale + cpl_colfill +
+    labs(title="Paid labour",
+         fill = NULL,
+         color = NULL,
+         x = NULL, subtitle = "y= mean paid work division score (index 1)") 
+
+pgg3 <- pgg2 + personal_theme
+
+#for standalone graph
+pgg3_1 <- pgg3 + labs(caption = "Source: TeO1 (2008-2009), survey-weighted\nUniverse: coresident man-woman couples (18-60)",
+                      title = "Gender division of paid labour by couple types")
+
+
+# plot 3: gdr_dom / cpl + cpl_sex
+out3_tpw <- w %>%
+  group_by(cpl) %>% 
+  summarize(prop = survey_mean(gdr_domdiv, na.rm = TRUE))
+
+pggg1 <- ggplot(data=out3_tpw,
+            mapping = aes(x=cpl, y=prop,
+                          ymin = prop - 2*prop_se,
+                          ymax = prop + 2*prop_se,
+                          fill = cpl,
+                          color = cpl,
+                          group = cpl), ylim(-3:3))
+
+pggg2 <- pggg1 + 
+    geom_col(position = position_dodge(width = 0.9), alpha = 0.5) +
+    geom_errorbar(width = 0.2, 
+                  position = position_dodge(width = 0.9)) +
+  cpl_colscale + cpl_colfill +
+    labs(title="Unpaid labour",
+         fill = NULL,
+         color = NULL,
+         x = NULL, subtitle = "y= mean unpaid work division score (index 1)") 
+
+pggg3 <- pggg2 + personal_theme
+
+# for standalone graph
+pgg3_1 <- pggg3 + labs(caption = "Source: TeO1 (2008-2009), survey-weighted\nUniverse: coresident man-woman couples (18-60)",
+                      title = "Gender division of unpaid labour by couple types")
+```
+
+
+```{r barplot_gdrspecFR, fig.showtext=TRUE}
+#| output-location: slide
+
+# Patchwork plots gdr_spec, gdr_workdiv, gdr_domdiv
+p <- (pg3 + pgg3 + pggg3) + 
+  plot_annotation(caption = "Source: TeO1 (2008-2009), survey-weighted | Universe: coresident man-woman couples (age 18-60)") +
+  plot_layout(guides = 'collect') & theme(legend.position = 'bottom', plot.caption = element_text(size=8, face="italic")) 
+  
+p
+#ggsave("barplot_gdr_spec_cpl.png", p, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 7, height = 3)
+```
+
+```{r}
+## barplots2 : gdr labour division by cpl_sex types
+# plot 1: gdr_spec / cpl_sex
+pout1_tpw <- w %>%
+  group_by(cpl_sex) %>% 
+  summarize(prop = survey_mean(gdr_spec, na.rm = TRUE))
+
+pt1 <- ggplot(data=pout1_tpw,
+            mapping = aes(x=cpl_sex, y=prop,
+                          ymin = prop - 2*prop_se,
+                          ymax = prop + 2*prop_se,
+                          fill = cpl_sex,
+                          color = cpl_sex,
+                          group = cpl_sex), ylim(-3:3))
+
+pt2 <- pt1 + 
+    geom_col(position = position_dodge(width = 0.9), alpha = 0.5, color='#A4A4A4') +
+    geom_errorbar(width = 0.2, 
+                  position = position_dodge(width = 0.9), color='#A4A4A4') +
+    cpl_sex_colfill +
+    labs(title="Gender-specialisation",
+         fill = NULL,
+         color = NULL,
+         x = NULL, subtitle = "y= mean gender-specialisation score (index 1)")
+  
+pt3 <- pt2 + personal_theme
+
+#for standalone graph
+pt3_1 <- pt3 + labs(caption = "Data: TeO1 (2008-2009), survey-weighted\nUniverse: coresident man-woman couples (18-60)",
+                      title = "Gender-specialisation of labour by couple types (gendered)")
+
+# plot 2: gdr_workdiv / cpl + cpl_sex
+
+pout2_tpw <- w %>%
+  group_by(cpl_sex) %>% 
+  summarize(prop = survey_mean(gdr_empdiv_sc, na.rm = TRUE))
+
+ptg1 <- ggplot(data=pout2_tpw,
+            mapping = aes(x=cpl_sex, y=prop,
+                          ymin = prop - 2*prop_se,
+                          ymax = prop + 2*prop_se,
+                          fill = cpl_sex,
+                          color = cpl_sex,
+                          group = cpl_sex), ylim(-3:3))
+
+ptg2 <- ptg1 + 
+    geom_col(position = position_dodge(width = 0.9), alpha = 0.5, color='#A4A4A4') +
+    geom_errorbar(width = 0.2, 
+                  position = position_dodge(width = 0.9), color='#A4A4A4') +
+  cpl_sex_colscale + cpl_sex_colfill +
+    labs(title="Paid labour",
+         fill = NULL,
+         color = NULL,
+         x = NULL, subtitle = "y= mean paid work division score (index 1)") 
+
+ptg3 <- ptg2 + personal_theme
+
+#for standalone graph
+ptg3_1 <- ptg3 + labs(caption = "Data: TeO1 (2008-2009), survey-weighted\nUniverse: coresident man-woman couples (18-60)",
+                      title = "Gender division of paid labour by couple types (gendered)")
+
+
+# plot 3: gdr_dom / cpl + cpl_sex
+pout3_tpw <- w %>%
+  group_by(cpl_sex) %>% 
+  summarize(prop = survey_mean(gdr_domdiv, na.rm = TRUE))
+
+ptgg1 <- ggplot(data=pout3_tpw,
+            mapping = aes(x=cpl_sex, y=prop,
+                          ymin = prop - 2*prop_se,
+                          ymax = prop + 2*prop_se,
+                          fill = cpl_sex,
+                          color = cpl_sex,
+                          group = cpl_sex), ylim(-3:3))
+
+ptgg2 <- ptgg1 + 
+    geom_col(position = position_dodge(width = 0.9), alpha = 0.5, color='#A4A4A4') +
+    geom_errorbar(width = 0.2, 
+                  position = position_dodge(width = 0.9), color='#A4A4A4') +
+  cpl_sex_colscale + cpl_sex_colfill +
+    labs(title="Unpaid labour",
+         fill = NULL,
+         color = NULL,
+         x = NULL, subtitle = "y= mean unpaid work division score (index 1)") 
+
+
+ptgg3 <- ptgg2 + personal_theme
+
+# for standalone graph
+ptg3_1 <- ptgg3 + labs(caption = "Data: TeO1 (2008-2009), survey-weighted\nUniverse: coresident man-woman couples (18-60)",
+                      title = "Gender division of unpaid labour by couple types (gendered)")
+```
+
+##
+
+```{r barplot_gdrspec2FR, fig.showtext=TRUE}
+#| output-location: slide
+p2 <- (pt3 + ptg3 + ptgg3) + 
+  plot_annotation(
+    caption = "Source: TeO1 (2008-2009), survey-weighted | Universe: coresident man-woman couples (age 18-60)") +
+  plot_layout(guides = 'collect') &
+  theme(legend.position = 'bottom', 
+        plot.caption = element_text(size=8,
+                                    face="italic"))
+
+p2
+```
+
+```{r, include=FALSE}
+#ggsave("barplot_gdr_spec_cpl_sex.png", p2, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 7, height = 3)
+```
+
+## Sequences
+::: {.panel-tabset}
+
+### France
+
+![](figures/TeO/seq3-weighted.png){height=450}
+
+
+### UK
+![](figures/UKLHS/seq3-weighted.png){height=450}
+:::
+
+
+## Sequence classification
+
+::: {.panel-tabset}
+
+### France 
+
+::: columns
+
+::: {.column width="50%"}
+![](figures/TeO/seqtree.png){height=500}
+:::
+
+::: {.column width="50%"}
+- Sequence analysis with optimal matching (transition costs based on frequency of transition)
+- Clustering (partitioning around medoids) into *6 clusters*
+:::
+
+:::
+
+### UK 
+
+::: columns
+
+::: {.column width="50%"}
+![](figures/UKLHS/tmpseqtree_UK_17:01:2021.png){height=500}
+:::
+
+::: {.column width="50%"}
+- Sequence analysis with optimal matching (transition costs based on frequency of transition)
+- Clustering (partitioning around medoids) into *5 clusters*
+:::
+
+:::
+
+:::
+
+## Sequence typology
+::: {.panel-tabset}
+
+### France 
+![](figures/TeO/seqplot_labelled(26:11:2020).png){height=500}
+
+
+### UK
+![](figures/UKLHS/seqplot_labelled(17:01:2021).png){height=500}
+:::
+
+
+
+## Migration sequences and life-course trajectories
+
+::: {.panel-tabset}
+
+### France
+![](figures/TeO/TeO_revgdrplot_pam6.png){height=500}
+
+### UK
+![](figures/UKLHS/pam5plotcplm.png){height=500}
+:::
+
+
+```{r revbarplot_pam6FR, fig.showtext=TRUE, fig.width=6, fig.height=3}
+#Problem here with gdrm (needs to be defined)
+
+pam6_labels <- c("Child migrants\n(1.5G)","Single young\nadults", "Single adults","Formation 1st\npartnership","Established 1st\npartnership","Partnership\nreconfigurations")
+
+out_t <- w %>%
+  filter(is.na(pam6)==F, is.na(cplm)==F) %>%
+  group_by(cplm, gdrm, pam6) %>% 
+  summarize(prop = survey_mean(na.rm = TRUE))
+
+out_cpl1 <- ggplot(data=subset(out_t, cplm=="MIG-NAT", color="black"),
+              mapping = aes(x=pam6, y=prop,
+                          ymin = prop - 2*prop_se,
+                          ymax = prop + 2*prop_se,
+                          fill = pam6,
+                          color = "black",
+                          group = pam6))
+
+out_cpl2 <- out_cpl1 + 
+  geom_col(position = dodge, alpha = 1) +
+  geom_errorbar(position = dodge, width = 0.2) + 
+  scale_x_discrete(name = "Union-migration sequences", labels = pam6_labels) +
+  scale_y_continuous(limits = c(0,0.75),labels = scales::percent_format(accuracy =5L)) +
+    scale_fill_manual(values = seq6_colour) +
+    scale_color_manual(values = "black") +
+    #scale_color_manual(values = seq6_colour) +
+    theme_ipsum(base_size = 12) + 
+  facet_wrap(~ gdrm, ncol = 2) +
+  guides(color = FALSE) +
+  labs(#subtitle = "MIG-NAT couples in France", 
+       caption = "Interpretation: Over 25% of migrant women partnered with a majority French native\n (MIG-NAT couples) are in the child migrants sequence cluster.\nSurvey-weighted percentages | Source: TeO") +
+  theme(legend.position = "bottom", legend.title = element_blank(), 
+        legend.text = element_text(size=8),
+        plot.caption = element_text(size=8, face="italic", hjust = (0.5)),
+        axis.text.y = element_text(size=8),
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(), axis.title.y = element_blank(),
+        strip.text = element_text(size=8, face = "bold"),
+        panel.spacing.x = unit(3, "lines"),
+        panel.border = element_rect(colour = "black", fill=NA),
+        plot.margin = unit(c(0.5,4,0.5,4), "cm"))
+
+#out_cpl2
+#ggsave(path = "Figures/Chapter3", filename = "TeO_barplot_cplm+pam6.png", out_cpl2, width = 7, height = 3.3)
+```
+
+
+
+
+
+## Migrant women {background-image="graphics//NicholasBaldion_Eviction.png" background-opacity="0.4"}
+
+*to do*
+- include UKLHS data (dataprep)
+- include necessary wrangling
+- include sequence partition plots for UKLHS
+- include gender-specialisation barplots for UKLHS
+- include sequence distribution barplots for MIG-NAT couples for UKLHS
+- include vertical plots for sequence distribution: (1) for France and (2) the UK
+- include final model table: to show that mixing matters a lot for men but not so much for women, once accounting for migration timing and trajectories.
+
+
+
+## Do the circumstances of migration matter for the gender-division of labour?
+
+::: {.panel-tabset}
+
+### France 
+![](figures/TeO/coefplot_gdrspecTeO.png){height=500}
+
+### UK
+![](figures/UKLHS/coefplot.png){height=500}
+:::
+
+## 
+![](figures/UKLHS/coefplot_gdrspec2.png){height=500}
+
+##
+![](figures/TeO/coefplotTeO_ALL_f.png){height=650}
+
+
+
+# Conclusion
+
+::: r-fit-text
+*Gendered paths to mixing*
+
+-   Migrant men in mixed couples = mainly child migration. 
+-   Migrant women in mixed couples = large proportion of couple-forming migration (involving majority native British and French men).
+
+*Contrasted stories of conjugal mixedness*
+
+-  for migrant men, intermarriage with majority group is associated with (much) more egalitarian relationships.
+- No such effect for women and no sign of compromise or adaptation in mixed couples.
+
+*Key points and open trails*
+
+- Assimilation theory: much better fit for migrant men's intermarriage (not perfect fit)
+- Disempowering paths of migration for women (negative effect of couple-forming migration overall)
+- There may be a durable power imbalance between native and migrant partner even when the migrant partner has long been in the country.
+- There may also be (reverse and gendered) self-selection and recruitment effects around gender attitudes
+:::
+
+
+# Thank you 
+
+::: columns
+::: {.column width="20%"}
+```{r, echo=FALSE, fig.width=4}
+library(qrcode)
+par(bg = "transparent")
+plot(qr_code("https://github.com/MarionLieutaud/BSPS2022"))
+```
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="77%"}
+![](graphics/github-logo.png){width=45} Deck and code: [Github/MarionLieutaud](https://github.com/MarionLieutaud/BSPS2022)
+
+\newline
+![](graphics/twitter_logo.png){width=45} Twitter/Marion_Lieutaud
+
+:::
+:::
+
+# Appendix
+
+
+## Abstract
+
+::: notes
+*Speaker notes go here*
+
+-   to enable presentor mode: press 'S' key
+
+-   to zoom into one part of the slide, press 'option' key and click on
+    that part
+:::
+
+::: r-fit-text
+Migrant-native intermarriage is a well-researched topic (Kulu and
+Hannemann 2016; Safi 2010) and a cornerstone of theories of
+assimilation. However, the gendered dynamics connecting migration and
+mixing are at best peripherally mentioned in most quantitative
+enquiries. Yet analyses of gendered outcomes of migration have noted the contrast between the economic and work benefits of intermarriage for migrant men (very beneficial) and for migrant women (not beneficial) (Basu 2015; Lieutaud 2021). This could well be explained by more or less disempowering 'journeys' to mixing (e.g. marriage migrants or 'trailing spouses' vs. independent 'pioneer' migrant ( González-Ferrer et al. 2018)). This paper investigates the life-course and legal circumstances of migration which form the backdrop to the formation of a mixed union, and whether they differ between migrant women and migrant men. Drawing on survey data from Understanding Society (UK, 2009-) and Trajectoires et Origines (France, 2008-2009, 2019-2020), I employ sequence analysis to build a typology of migration journeys (see Castro Torres 2020; Kulu and Mikolai 2021). I find that couple-forming migration is a frequent feature of mixed unions involving migrant women, indicating scenarios where they either followed their partner immediately after starting the relationship, or were only just arrived. Migrant men in mixed unions, in contrast, were long there by the time when they formed a mixed union. Mixed unions in France are also overall more likely to involve child migrants, which could be connected to slightly different policies around bringing dependents, and the importance of school socialization in the French context.
+:::
+
+
+
+## Stepwise model
+![](figures/TeO/coefplotTeO_stepwise_GII_relig1.png){height=500}
+
+
+## by cpl_sex
+
+```{r, fig.showtext=TRUE}
+#stacked barplots
+# by cpl_sex
+
+# all
+out1 <- NA
+out1 <- w %>%
+  filter(!is.na(cpl_sex) & !is.na(gdr_employ_div)) %>%
+  group_by(cpl_sex, gdr_employ_div) %>%
+  survey_tally()
+
+pl1 <- ggplot(out1, aes(x=cpl_sex, y=n, fill=gdr_employ_div, color=cpl_sex)) + 
+    geom_bar(alpha=0.8, size=.5,  position = "fill", stat="identity") +
+    scale_fill_manual(values=c("grey29", "grey41", "gray70","black")) +
+    cpl_sex_colscale +
+    scale_y_continuous(breaks=c(0, 0.25, 0.50, 0.75, 1), labels = scales::percent_format(accuracy = 5L, scale = 100)) +
+    theme_ipsum(base_size = 12) + 
+    guides(color = FALSE) +
+    labs(#subtitle="Couples' joint employment status,\nby gendered couple types",
+         caption = "Survey-weighted\n Source: TeO1 (2008-2009)\nUniverse: coresident man-woman couples (18-60)",
+         fill = NULL, color = NULL, y = NULL, x = NULL) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+          legend.position = "right",
+          axis.text.x = element_text(size = 12, angle = 45, hjust = 1, face = c("plain", "plain", "plain", "plain", "bold", "bold", "bold", "bold", "bold")),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(hjust = 0.5, size=10),
+          #plot.subtitle = element_text(size = 12, face="bold"),
+          plot.caption.position =  "plot")
+
+pl1
+#ggsave("stackplot_employdiv_cplsex.png", pl1, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 5, height = 4)
+```
+
+## by regi3
+
+```{r, fig.showtext=TRUE}
+# by regi2
+
+# all
+out2 <- NA
+out2 <- w %>%
+  filter(!is.na(regi3) & !is.na(gdr_employ_div)) %>%
+  group_by(regi3, gdr_employ_div) %>%
+  survey_tally()
+
+pl2 <- ggplot(out2, aes(x=regi3, y=n, fill=gdr_employ_div)) + 
+    geom_bar(alpha=0.8, size=.5, colour="white", position = "fill", stat="identity") +
+    scale_fill_manual(values=c("grey29", "grey41", "gray70","black")) +
+    scale_y_continuous(breaks=c(0, 0.25, 0.50, 0.75, 1), labels = scales::percent_format(accuracy = 5L, scale = 100)) +
+    theme_ipsum(base_size = 12) + 
+    labs(#subtitle="Couples' joint employment status,\nby individuals' area of birth",
+         caption = "Survey-weighted\n Source: TeO1 (2008-2009)\nUniverse: coresident man-woman couples (18-60)",
+         fill = NULL, color = NULL, y = NULL, x = NULL) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+          legend.position = "right",
+          axis.text.x = element_text(size = 12, angle = 45, hjust = 1, vjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(hjust = 0.5, size=10),
+          #plot.subtitle = element_text(size = 12, face="bold"),
+          plot.caption.position =  "plot")
+
+pl2
+#ggsave("stackplot_employdiv_regi3.png", pl2, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 4.5, height = 4)
+```
+
+## pam6nat women {auto-animate="true"}
+
+```{r, fig.showtext=TRUE}
+# Women
+out3 <- NA
+out3 <- w %>%
+  filter(!is.na(pam6nat) & !is.na(gdr_employ_div) & sexee == 2) %>%
+  group_by(pam6nat, gdr_employ_div) %>%
+  survey_tally()
+
+pl3 <- ggplot(out3, aes(x=pam6nat, y=n, fill=gdr_employ_div)) + 
+    geom_bar(alpha=0.8, size=.5, colour="white", position = "fill", stat="identity") +
+    scale_fill_manual(values=c("grey29", "grey41", "gray70","black")) +
+    pam6_colscale +
+    scale_y_continuous(breaks=c(0, 0.25, 0.50, 0.75, 1), labels = scales::percent_format(accuracy = 5L, scale = 100)) +
+    theme_ipsum(base_size = 12) + 
+    labs(#subtitle="Couples' joint employment status,\nby individuals' area of birth",
+         caption = "Survey-weighted\n Source: TeO1 (2008-2009)\nUniverse: coresident man-woman couples (18-60)",
+         fill = NULL, color = NULL, y = NULL, x = NULL) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+          legend.position = "right",
+          axis.text.x = element_text(size = 12, angle = 45, hjust = 1, vjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(hjust = 0.5, size=10),
+          #plot.subtitle = element_text(size = 12, face="bold"),
+          plot.caption.position =  "plot")
+
+pl3
+#ggsave("stackplot_employdiv_pam6_women.png", pl3, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 4.5, height = 4)
+```
+
+## Pam6Nat Men {auto-animate="true"}
+
+```{r, fig.showtext=TRUE}
+# men
+out4 <- NA
+out4 <- w %>%
+  filter(!is.na(pam6nat) & !is.na(gdr_employ_div) & sexee == 1) %>%
+  group_by(pam6nat, gdr_employ_div) %>%
+  survey_tally()
+
+pl4 <- ggplot(out4, aes(x=pam6nat, y=n, fill=gdr_employ_div)) + 
+    geom_bar(alpha=0.8, size=.5, colour="white", position = "fill", stat="identity") +
+    scale_fill_manual(values=c("grey29", "grey41", "gray70","black")) +
+    pam6_colscale +
+    scale_y_continuous(breaks=c(0, 0.25, 0.50, 0.75, 1), labels = scales::percent_format(accuracy = 5L, scale = 100)) +
+    theme_ipsum(base_size = 12) + 
+    labs(#subtitle="Couples' joint employment status,\nby individuals' area of birth",
+         caption = "Survey-weighted\n Source: TeO1 (2008-2009)\nUniverse: coresident man-woman couples (18-60)",
+         fill = NULL, color = NULL, y = NULL, x = NULL) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 0.2), "cm"),
+          legend.position = "right",
+          axis.text.x = element_text(size = 12, angle = 45, hjust = 1, vjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(hjust = 0.5, size=10),
+          #plot.subtitle = element_text(size = 12, face="bold"),
+          plot.caption.position =  "plot")
+
+pl4
+#ggsave("stackplot_employdiv_pam6_men.png", pl4, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 4.5, height = 4)
+```
+
+## Pam6Nat2 women {auto-animate="true"}
+
+```{r, fig.showtext=TRUE}
+# Women
+out3 <- NA
+out3 <- w %>%
+  filter(!is.na(pam6nat2) & !is.na(gdr_employ_div) & sexee == 2) %>%
+  group_by(pam6nat2, gdr_employ_div) %>%
+  survey_tally()
+
+pl3 <- ggplot(out3, aes(x=pam6nat2, y=n, fill=gdr_employ_div)) + 
+    geom_bar(alpha=0.8, size=.5, colour="white", position = "fill", stat="identity") +
+    scale_fill_manual(values=c("grey29", "grey41", "gray70","black")) +
+    scale_y_continuous(breaks=c(0, 0.25, 0.50, 0.75, 1), labels = scales::percent_format(accuracy = 5L, scale = 100)) +
+    theme_ipsum(base_size = 12) + 
+    labs(#subtitle="Couples' joint employment status,\nby individuals' area of birth",
+         caption = "Survey-weighted\n Source: TeO1 (2008-2009)\nUniverse: coresident man-woman couples (18-60)",
+         fill = NULL, color = NULL, y = NULL, x = NULL) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 1), "cm"),
+          legend.position = "right",
+          axis.text.x = element_text(size = 12, angle = 45, hjust = 1, vjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(hjust = 0.5, size=10),
+          #plot.subtitle = element_text(size = 12, face="bold"),
+          plot.caption.position =  "plot")
+
+pl3
+#ggsave("stackplot_employdiv_pam6nat2_women.png", pl3, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 4.5, height = 4)
+```
+
+## Pam6Nat2 Men {auto-animate="true"}
+
+```{r, fig.showtext=TRUE}
+# men
+out4 <- NA
+out4 <- w %>%
+  filter(!is.na(pam6nat2) & !is.na(gdr_employ_div) & sexee == 1) %>%
+  group_by(pam6nat2, gdr_employ_div) %>%
+  survey_tally()
+
+pl4 <- ggplot(out4, aes(x=pam6nat2, y=n, fill=gdr_employ_div)) + 
+    geom_bar(alpha=0.8, size=.5, colour="white", position = "fill", stat="identity") +
+    scale_fill_manual(values=c("grey29", "grey41", "gray70","black")) +
+    scale_y_continuous(breaks=c(0, 0.25, 0.50, 0.75, 1), labels = scales::percent_format(accuracy = 5L, scale = 100)) +
+    theme_ipsum(base_size = 12) + 
+    labs(#subtitle="Couples' joint employment status,\nby individuals' area of birth",
+         caption = "Survey-weighted\n Source: TeO1 (2008-2009)\nUniverse: coresident man-woman couples (18-60)",
+         fill = NULL, color = NULL, y = NULL, x = NULL) +
+    theme(plot.margin = unit(c(0.2, 0.2, 0.2, 1), "cm"),
+          legend.position = "right",
+          axis.text.x = element_text(size = 12, angle = 45, hjust = 1, vjust = 1),
+          axis.title.x = element_blank(),
+          axis.title.y = element_text(hjust = 0.5, size=10),
+          #plot.subtitle = element_text(size = 12, face="bold"),
+          plot.caption.position =  "plot")
+
+pl4
+#ggsave("stackplot_employdiv_pam6nat2_men.png", pl4, path = "~/Desktop/stats & scripts/French analyses/TeO analyses/Figures/Chapter5", width = 4.5, height = 4)
+```
+
